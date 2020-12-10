@@ -24,17 +24,37 @@ app.layout = html.Div([
     html.H1("Web Application Dashboards with Dash", style={'text-align': 'center'}),
     
     #select year dropdown
-    # dcc.Dropdown(id="slct_year",
-    #              options=[
-    #                  {"label": "2015", "value": 2015},
-    #                  {"label": "2016", "value": 2016},
-    #                  {"label": "2017", "value": 2017},
-    #                  {"label": "2018", "value": 2018}],
-    #              multi=False,
-    #              value=2015,
-    #              style={'width': "40%"}
-    #              ),
+    dcc.Dropdown(id="slct_year",
+                 options=[
+                     {"label": "2015", "value": 2015},
+                     {"label": "2016", "value": 2016},
+                     {"label": "2017", "value": 2017},
+                     {"label": "2018", "value": 2018}],
+                 multi=False,
+                 value=2015,
+                 style={'width': "40%"}
+                 ),
     
+    #display choropleth map
+    html.Div(id='choropleth_container', children=[]),
+    html.Br(),
+
+    dcc.Graph(id='choropleth_map', figure={}),
+    
+    html.Br(),
+    html.Br(),
+    html.Br(),
+    
+    #dispaly bar graph
+    html.Div(id='bar_container', children=[]),
+    html.Br(),
+
+    dcc.Graph(id='bar_map', figure={}),
+    
+    html.Br(),
+    html.Br(),
+    html.Br(),
+
     #select Affected by reason
     dcc.Dropdown(id='slct_affectedBy',
                 options=[
@@ -45,11 +65,15 @@ app.layout = html.Div([
                 value='Disease',
                 style={'width':"40%"} 
                 ),
-
-    html.Div(id='output_container', children=[]),
+    
     html.Br(),
 
-    dcc.Graph(id='my_bee_map', figure={})
+    #display line graph
+    #dispaly bar graph
+    html.Div(id='line_container', children=[]),
+    html.Br(),
+
+    dcc.Graph(id='line_map', figure={})
 
 ])
 
@@ -57,72 +81,34 @@ app.layout = html.Div([
 # ------------------------------------------------------------------------------
 # Connect the Plotly graphs with Dash Components
 @app.callback(
-    [Output(component_id='output_container', component_property='children'),
-     Output(component_id='my_bee_map', component_property='figure')],
-    [Input(component_id='slct_affectedBy', component_property='value')]
+    [Output(component_id='choropleth_container', component_property='children'),
+     Output(component_id='choropleth_map', component_property='figure')],
+    [Input(component_id='slct_year', component_property='value')]
 )
-def update_graph(option_slctd):
+def choropleth_map(option_slctd):
     print(option_slctd)
     print(type(option_slctd))
 
-    #container = "The year chosen by user was: {}".format(option_slctd)
-    container = "The Affected by reason chosen by user was: {}".format(option_slctd)
+    container = "The year chosen by user was: {}".format(option_slctd)
 
     #df processing for choropleth map
-    # dff = df.copy()
-    # dff = dff[dff["Year"] == option_slctd]
-    # dff = dff[dff["Affected by"] == "Varroa_mites"]
-    
-    #df processing for line graph
     dff = df.copy()
-    dff = dff[dff['Affected by']==option_slctd]
-    #keep only three states for analysis(Texas, New York, California)
-    states = ['Texas', 'New York', 'California']
-    dff = dff[dff['State'].isin(states)]
-
-
+    dff = dff[dff["Year"] == option_slctd]
+    dff = dff[dff["Affected by"] == "Varroa_mites"]
 
     # Plotly Express
-    # fig = px.choropleth(
-    #     data_frame=dff,
-    #     locationmode='USA-states',
-    #     locations='state_code',
-    #     scope="usa",
-    #     color='Pct of Colonies Impacted',
-    #     hover_data=['State', 'Pct of Colonies Impacted'],
-    #     color_continuous_scale=px.colors.sequential.YlOrRd,
-    #     labels={'Pct of Colonies Impacted': '% of Bee Colonies'},
-    #     template='plotly_dark'
-    # )
-    
-    #bar graph
-    # fig = px.bar(
-    #     data_frame=dff,
-    #     x='State',
-    #     y='Pct of Colonies Impacted',
-    #     color='Pct of Colonies Impacted',
-    #     color_continuous_scale=px.colors.sequential.YlOrRd,  
-    #     template='plotly_dark'
-    # )
-   
-    #line graph
-    fig = px.line(
+    fig = px.choropleth(
         data_frame=dff,
-        x='Year',
-        y='Pct of Colonies Impacted',
-        line_group='State',
-        color='State',
-        hover_name='State',
+        locationmode='USA-states',
+        locations='state_code',
+        scope="usa",
+        color='Pct of Colonies Impacted',
+        hover_data=['State', 'Pct of Colonies Impacted'],
+        color_continuous_scale=px.colors.sequential.YlOrRd,
+        labels={'Pct of Colonies Impacted': '% of Bee Colonies'},
         template='plotly_dark'
     )
     
-    fig.update_layout(
-        title_text="Trend of Bees affected in important states",
-        title_xanchor="center",
-        title_font=dict(size=24),
-        title_x=0.5,
-        showlegend=True
-    )
 
     # Plotly Graph Objects (GO)
     # fig = go.Figure(
@@ -134,16 +120,89 @@ def update_graph(option_slctd):
     #     )]
     # )
     #
-    # fig.update_layout(
-    #     title_text="Bees Affected by Mites in the USA",
-    #     title_xanchor="center",
-    #     title_font=dict(size=24),
-    #     title_x=0.5,
-    #     geo=dict(scope='usa'),
-    # )
+    fig.update_layout(
+        title_text="Bees Affected by Mites in the USA",
+        title_xanchor="center",
+        title_font=dict(size=24),
+        title_x=0.5,
+        geo=dict(scope='usa'),
+    )
 
     return container, fig
 
+@app.callback(
+    [Output(component_id='bar_container', component_property='children'),
+     Output(component_id='bar_map', component_property='figure')],
+    [Input(component_id='slct_year', component_property='value')]
+)
+def bar_graph(option_slctd):
+    print(option_slctd)
+    print(type(option_slctd))
+
+    container = "The year chosen by user was: {}".format(option_slctd)
+
+    #df processing for bar graph
+    dff = df.copy()
+    dff = dff[dff["Year"] == option_slctd]
+    dff = dff[dff["Affected by"] == "Varroa_mites"]
+
+    
+    #bar graph
+    fig = px.bar(
+        data_frame=dff,
+        x='State',
+        y='Pct of Colonies Impacted',
+        color='Pct of Colonies Impacted',
+        color_continuous_scale=px.colors.sequential.YlOrRd,  
+        template='plotly_dark'
+    )
+
+    fig.update_layout(
+        title_text="Bees Affected by Mites according to US states",
+        title_xanchor="center",
+        title_font=dict(size=24),
+        title_x=0.5,
+        geo=dict(scope='usa'),
+    )
+    return container, fig
+
+@app.callback(
+    [Output(component_id='line_container', component_property='children'),
+     Output(component_id='line_map', component_property='figure')],
+    [Input(component_id='slct_affectedBy', component_property='value')]
+)
+def line_graph(option_slctd):
+    print(option_slctd)
+    print(type(option_slctd))
+    
+    container = "Bees Affected due to: {}".format(option_slctd)
+    #df processing for line graph
+    dff = df.copy()
+    dff = dff[dff['Affected by']==option_slctd]
+    #keep only three states for analysis(Texas, New York, California)
+    states = ['Texas', 'New York', 'California']
+    dff = dff[dff['State'].isin(states)]
+  
+    #line graph
+    fig = px.line(
+        data_frame=dff,
+        x='Year',
+        y='Pct of Colonies Impacted',
+        line_group='State',
+        color='State',
+        hover_name='State',
+        #template='plotly_dark'
+    )
+    
+    fig.update_layout(
+        title_text="Trend of Bees affected in important states",
+        title_xanchor="center",
+        title_font=dict(size=24),
+        title_x=0.5,
+        showlegend=True,
+        template='plotly_dark'
+    )
+    return container, fig
 
 # ------------------------------------------------------------------------------
 if __name__ == '__main__':
