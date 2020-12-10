@@ -1,0 +1,7 @@
+Youtube video:
+https://www.youtube.com/watch?v=hSPmj7mK6ng&ab_channel=CharmingData&t=1704s
+
+Github link:
+https://github.com/Coding-with-Adam/Dash-by-Plotly/blob/master/Other/Dash_Introduction/intro.py
+
+Other uselinks are provided in the youtube video description.
